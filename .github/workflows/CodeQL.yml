@@ -9,9 +9,8 @@ on:
 
 jobs:
   codeql:
-    uses: moonpig/moonpig-ops-pipeline-workflows/.github/workflows/moonpig-codeql.yml@test-codeql-reusable-workflow
+    uses: your-user/dev-sec-workflows/.github/workflows/reusable-codeql.yml@main
     with:
       build-modes: '{"csharp":"manual"}'
       codeql-config: ""
-      external-repo: ""
     secrets: inherit
