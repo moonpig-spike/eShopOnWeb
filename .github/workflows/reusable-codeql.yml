@@ -1,0 +1,68 @@
+name: Reusable CodeQL (Dev)
+
+on:
+  workflow_call:
+    inputs:
+      build-modes:
+        type: string
+        default: "{}"
+      codeql-config:
+        type: string
+        default: ""
+    secrets:
+      SLACK_WEBHOOK:
+        required: false
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+jobs:
+  create-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.languages }}
+    steps:
+      - name: Detect languages
+        id: set-matrix
+        uses: advanced-security/set-codeql-language-matrix@v1
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+          endpoint: ${{ github.event.repository.languages_url }}
+
+  analyze:
+    needs: create-matrix
+    if: ${{ needs.create-matrix.outputs.matrix != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ${{ fromJSON(needs.create-matrix.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ fromJSON(inputs.build-modes)[matrix.language] || 'none' }}
+          config-file: ${{ inputs.codeql-config }}
+
+      - if: ${{ fromJSON(inputs.build-modes)[matrix.language] == 'manual' }}
+        name: Ensure local build action exists
+        shell: bash
+        run: |
+          test -f .github/actions/codeql-build/action.yml
+
+      - if: ${{ fromJSON(inputs.build-modes)[matrix.language] == 'manual' }}
+        name: Manual build
+        uses: ./.github/actions/codeql-build
+        with:
+          language: ${{ matrix.language }}
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
