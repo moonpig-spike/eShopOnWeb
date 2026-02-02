@@ -1,0 +1,25 @@
+name: "CodeQL Manual Build"
+description: "Build steps used between CodeQL init and analyze when build-mode=manual."
+inputs:
+  language:
+    description: "CodeQL language (e.g. csharp, java-kotlin, cpp)"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup .NET (C#)
+      if: ${{ inputs.language == 'csharp' }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: "8.0.x"
+
+    - name: Restore + Build (C#)
+      if: ${{ inputs.language == 'csharp' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        dotnet --info
+        # If your repo has a solution at root:
+        dotnet restore
+        dotnet build -c Release --no-restore
