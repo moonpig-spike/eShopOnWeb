@@ -9,7 +9,7 @@ on:
 
 jobs:
   codeql:
-    uses: your-user/dev-sec-workflows/.github/workflows/reusable-codeql.yml@main
+    uses: moonpig-spike/SPIKE-WORKFLOW-TEST/.github/workflows/moonpig-codeql.yml@main
     with:
       build-modes: '{"csharp":"manual"}'
       codeql-config: ""
